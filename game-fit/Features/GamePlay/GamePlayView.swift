@@ -41,7 +41,7 @@ struct GamePlayView: View {
                     Text("라운드")
                         .font(.appCaption)
                         .foregroundStyle(Color.appTextSecondary)
-                    Text("\(viewModel.currentRound + 1) / \(viewModel.totalRounds)")
+                    Text("\(min(viewModel.currentRound + 1, viewModel.totalRounds)) / \(viewModel.totalRounds)")
                         .font(.appBody.bold())
                         .foregroundStyle(Color.appTextPrimary)
                 }
@@ -113,7 +113,7 @@ struct GamePlayView: View {
         .sheet(isPresented: $showPauseSheet) {
             PauseMenuView(
                 onResume: { showPauseSheet = false; viewModel.resume() },
-                onRestart: { showPauseSheet = false; viewModel.restart() },
+                onRestart: { showPauseSheet = false; viewModel.restart(); viewModel.startRound() },
                 onExit: { showPauseSheet = false; viewModel.pause(); dismiss() }
             )
             .presentationDetents([.fraction(0.35)])

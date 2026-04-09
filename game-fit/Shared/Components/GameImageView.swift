@@ -11,7 +11,8 @@ struct GameImageView: View {
             Image(uiImage: uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .accessibilityLabel(Text(accessibilityLabel ?? imageName))
+                .accessibilityLabel(Text(accessibilityLabel ?? ""))
+                .accessibilityHidden(accessibilityLabel == nil)
         } else {
             Color.appPrimaryTint
                 .overlay(
@@ -21,7 +22,8 @@ struct GameImageView: View {
                         .accessibilityHidden(true)
                 )
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(accessibilityLabel ?? imageName))
+                .accessibilityLabel(Text(accessibilityLabel ?? ""))
+                .accessibilityHidden(accessibilityLabel == nil)
         }
     }
 }
