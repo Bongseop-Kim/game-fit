@@ -43,6 +43,21 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertTrue(vm.isComplete)
     }
 
+    func test_recordResult_afterCompletion_isIgnored() {
+        vm.recordResult(correct: true)
+        vm.recordResult(correct: true)
+        vm.recordResult(correct: true)
+
+        XCTAssertTrue(vm.isComplete)
+
+        vm.recordResult(correct: false)
+
+        XCTAssertEqual(vm.currentRound, 3)
+        XCTAssertEqual(vm.correctCount, 3)
+        XCTAssertEqual(vm.incorrectCount, 0)
+        XCTAssertEqual(vm.roundResponseTimes.count, 3)
+    }
+
     func test_progress_afterOneRound_isOneThird() {
         vm.recordResult(correct: true)
         XCTAssertEqual(vm.progress, 1.0 / 3.0, accuracy: 0.001)

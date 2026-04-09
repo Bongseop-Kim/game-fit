@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class UserSettings {
-    var defaultDifficulty: String   // "easy" | "normal" | "hard"
+    var defaultDifficulty: Difficulty
     var countdownSeconds: Int
     var autoSaveResult: Bool
     var soundEffectOn: Bool
@@ -12,7 +12,7 @@ final class UserSettings {
     var isOnboardingComplete: Bool
 
     init(
-        defaultDifficulty: String = "normal",
+        defaultDifficulty: Difficulty = .normal,
         countdownSeconds: Int = 3,
         autoSaveResult: Bool = true,
         soundEffectOn: Bool = true,

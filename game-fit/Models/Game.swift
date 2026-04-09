@@ -42,7 +42,7 @@ struct GameMeta: Identifiable {
     }
 }
 
-enum Difficulty: String, CaseIterable {
+enum Difficulty: String, CaseIterable, Codable {
     case easy
     case normal
     case hard

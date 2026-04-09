@@ -8,20 +8,13 @@ struct GameDetailView: View {
     @State private var selectedDifficulty: Difficulty = .normal
     @State private var showCountdown = false
     @State private var navigateToPlay = false
-    @Query private var allSessions: [GameSession]
-    @Environment(AppState.self) private var appState
+    @State private var cachedBestSession: GameSession? = nil
     @Environment(\.modelContext) private var context
 
     init(game: GameMeta, initialDifficulty: Difficulty = .normal) {
         self.game = game
         self.initialDifficulty = initialDifficulty
         _selectedDifficulty = State(initialValue: initialDifficulty)
-    }
-
-    private var bestSession: GameSession? {
-        allSessions
-            .filter { $0.gameId == game.id && $0.difficulty == selectedDifficulty.rawValue }
-            .max(by: { $0.accuracy < $1.accuracy })
     }
 
     var body: some View {
@@ -51,6 +44,12 @@ struct GameDetailView: View {
                 }
             }
         }
+        .onAppear {
+            cachedBestSession = fetchBestSession()
+        }
+        .onChange(of: selectedDifficulty) {
+            cachedBestSession = fetchBestSession()
+        }
         .navigationDestination(isPresented: $navigateToPlay) {
             GamePlayView(game: game, difficulty: selectedDifficulty)
         }
@@ -60,7 +59,8 @@ struct GameDetailView: View {
         GameImageView(
             imageName: "game_\(game.id)",
             fallbackSymbol: game.sfSymbol,
-            fallbackFontSize: 52
+            fallbackFontSize: 52,
+            accessibilityLabel: game.name
         )
         .frame(maxWidth: .infinity)
         .frame(height: 180)
@@ -98,7 +98,7 @@ struct GameDetailView: View {
             Text("최고 기록")
                 .font(.appHeadline)
                 .foregroundStyle(Color.appTextPrimary)
-            if let best = bestSession {
+            if let best = cachedBestSession {
                 HStack {
                     Label(String(format: "정확도 %.0f%%", best.accuracy * 100),
                           systemImage: "target")
@@ -117,6 +117,24 @@ struct GameDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.cardPadding)
         .cardStyle()
+    }
+
+    private func fetchBestSession() -> GameSession? {
+        let gameId = game.id
+        let difficulty = selectedDifficulty.rawValue
+        let descriptor = FetchDescriptor<GameSession>(
+            predicate: #Predicate { session in
+                session.gameId == gameId && session.difficulty == difficulty
+            }
+        )
+
+        do {
+            let sessions = try context.fetch(descriptor)
+            return sessions.max(by: { $0.accuracy < $1.accuracy })
+        } catch {
+            assertionFailure("fetchBestSession failed: \(error)")
+            return nil
+        }
     }
 }
 

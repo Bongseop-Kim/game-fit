@@ -16,7 +16,12 @@ final class AppStateTests: XCTestCase {
             configurations: config
         )
         context = ModelContext(container)
-        testNow = Date()
+        testNow = Calendar.current.date(from: DateComponents(
+            year: 2026,
+            month: 4,
+            day: 9,
+            hour: 12
+        ))!
         appState = AppState()
     }
 
@@ -29,14 +34,14 @@ final class AppStateTests: XCTestCase {
     // MARK: totalSessions
 
     func test_totalSessions_emptyDatabase_returnsZero() {
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.totalSessions, 0)
     }
 
     func test_totalSessions_afterOneInsert_returnsOne() throws {
         context.insert(makeSession())
         try context.save()
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.totalSessions, 1)
     }
 
@@ -45,28 +50,28 @@ final class AppStateTests: XCTestCase {
         context.insert(makeSession())
         context.insert(makeSession())
         try context.save()
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.totalSessions, 3)
     }
 
     // MARK: streak
 
     func test_streak_noSessions_returnsZero() {
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.streak, 0)
     }
 
     func test_streak_onlyYesterday_returnsZero() throws {
         context.insert(makeSession(daysAgo: 1))  // yesterday only, no today
         try context.save()
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.streak, 0)  // current streak requires today
     }
 
     func test_streak_sessionToday_returnsOne() throws {
         context.insert(makeSession(daysAgo: 0))
         try context.save()
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.streak, 1)
     }
 
@@ -74,7 +79,7 @@ final class AppStateTests: XCTestCase {
         context.insert(makeSession(daysAgo: 0))
         context.insert(makeSession(daysAgo: 1))
         try context.save()
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.streak, 2)
     }
 
@@ -82,8 +87,18 @@ final class AppStateTests: XCTestCase {
         context.insert(makeSession(daysAgo: 0))
         context.insert(makeSession(daysAgo: 2))  // gap on day 1
         try context.save()
-        appState.refresh(using: context)
+        appState.refresh(using: context, now: testNow)
         XCTAssertEqual(appState.streak, 1)  // gap breaks streak
+    }
+
+    func test_overallGrade_afterSessions_isNotPlaceholder() throws {
+        context.insert(makeSession(daysAgo: 0))
+        context.insert(makeSession(daysAgo: 1))
+        try context.save()
+
+        appState.refresh(using: context, now: testNow)
+
+        XCTAssertNotEqual(appState.overallGrade, "-")
     }
 
     // MARK: helpers

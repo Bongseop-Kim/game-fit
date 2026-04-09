@@ -49,7 +49,7 @@ struct GamePlayView: View {
                 Spacer()
 
                 VStack(spacing: 1) {
-                    Text("남은 시간")
+                    Text("경과 시간")
                         .font(.appCaption)
                         .foregroundStyle(Color.appTextSecondary)
                     Text(String(format: "%.1fs", viewModel.elapsedSeconds))
@@ -108,7 +108,7 @@ struct GamePlayView: View {
             }
         }
         .onChange(of: viewModel.isComplete) { _, isComplete in
-            if isComplete { completedSession = viewModel.buildSession(grade: "B") }
+            if isComplete { completedSession = viewModel.buildSession(grade: viewModel.grade) }
         }
         .sheet(isPresented: $showPauseSheet) {
             PauseMenuView(
@@ -117,6 +117,7 @@ struct GamePlayView: View {
                 onExit: { showPauseSheet = false; viewModel.pause(); dismiss() }
             )
             .presentationDetents([.fraction(0.35)])
+            .interactiveDismissDisabled(true)
         }
         .onChange(of: showPauseSheet) { _, isShowing in
             if isShowing { viewModel.pause() }

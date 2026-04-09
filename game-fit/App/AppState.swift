@@ -9,14 +9,27 @@ final class AppState {
     private(set) var totalSessions: Int = 0
     private(set) var streak: Int = 0
     private(set) var overallGrade: String = "-"   // 추후 게임별 로직으로 대체
+    @ObservationIgnored private var lastRefreshKey: RefreshKey?
 
-    func refresh(using context: ModelContext) {
-        totalSessions = fetchTotalSessions(context)
-        streak = computeStreak(context)
-        // overallGrade: 게임별 등급 산정 로직 TBD — 현재 "-" 유지
+    func refresh(using context: ModelContext, now: Date = .now) {
+        let sessionCount = fetchTotalSessions(context)
+        let refreshDay = Calendar.current.startOfDay(for: now)
+        let refreshKey = RefreshKey(sessionCount: sessionCount, refreshDay: refreshDay)
+
+        guard lastRefreshKey != refreshKey else { return }
+
+        totalSessions = sessionCount
+        streak = computeStreak(context, now: now)
+        overallGrade = computeOverallGrade(totalSessions: sessionCount, streak: streak)
+        lastRefreshKey = refreshKey
     }
 
     // MARK: private
+
+    private struct RefreshKey: Equatable {
+        let sessionCount: Int
+        let refreshDay: Date
+    }
 
     private func fetchTotalSessions(_ context: ModelContext) -> Int {
         do {
@@ -27,7 +40,7 @@ final class AppState {
         }
     }
 
-    private func computeStreak(_ context: ModelContext) -> Int {
+    private func computeStreak(_ context: ModelContext, now: Date) -> Int {
         let descriptor = FetchDescriptor<GameSession>(
             sortBy: [SortDescriptor(\.playedAt, order: .reverse)]
         )
@@ -44,12 +57,25 @@ final class AppState {
         let sessionDays = Set(sessions.map { calendar.startOfDay(for: $0.playedAt) })
 
         var count = 0
-        var checkDate = calendar.startOfDay(for: .now)
+        var checkDate = calendar.startOfDay(for: now)
         while sessionDays.contains(checkDate) {
             count += 1
             guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
             checkDate = prev
         }
         return count
+    }
+
+    private func computeOverallGrade(totalSessions: Int, streak: Int) -> String {
+        switch (totalSessions, streak) {
+        case (20..., 7...):
+            return "A"
+        case (10..., 3...):
+            return "B"
+        case (1..., _):
+            return "C"
+        default:
+            return "-"
+        }
     }
 }

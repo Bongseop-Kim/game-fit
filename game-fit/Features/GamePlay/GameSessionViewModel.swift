@@ -33,6 +33,8 @@ final class GameSessionViewModel {
     }
 
     func recordResult(correct: Bool) {
+        guard !isComplete, currentRound < totalRounds else { return }
+
         let responseTime = elapsedSeconds
         roundResponseTimes.append(responseTime)
         if correct { correctCount += 1 } else { incorrectCount += 1 }
@@ -90,9 +92,30 @@ final class GameSessionViewModel {
         return roundResponseTimes.reduce(0, +) / Double(roundResponseTimes.count)
     }
 
+    var accuracy: Double {
+        guard totalRounds > 0 else { return 0 }
+        return Double(correctCount) / Double(totalRounds)
+    }
+
+    var grade: String {
+        switch accuracy {
+        case 0.9...:
+            return "A"
+        case 0.75...:
+            return "B"
+        case 0.6...:
+            return "C"
+        default:
+            return "F"
+        }
+    }
+
     // MARK: - Private
 
     private func startTimer() {
+        timerCancellable?.cancel()
+        timerCancellable = nil
+
         timerCancellable = Timer.publish(every: 0.1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in

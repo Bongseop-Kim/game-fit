@@ -27,7 +27,7 @@ struct DifficultyPicker: View {
             }
         }
         .padding(3)
-        .background(Color(hex: "#F3F4F6"))
+        .background(Color.appBackground)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }

@@ -16,8 +16,8 @@ struct SettingsView: View {
 
                 Section {
                     Picker("기본 난이도", selection: $s.defaultDifficulty) {
-                        ForEach(Difficulty.allCases, id: \.rawValue) { d in
-                            Text(d.displayName).tag(d.rawValue)
+                        ForEach(Difficulty.allCases, id: \.self) { d in
+                            Text(d.displayName).tag(d)
                         }
                     }
                     Stepper("카운트다운 \(s.countdownSeconds)초",
@@ -85,8 +85,12 @@ struct SettingsView: View {
     }
 
     private func clearAllSessions() {
-        try? context.delete(model: GameSession.self)
-        appState.refresh(using: context)
+        do {
+            try context.delete(model: GameSession.self)
+            appState.refresh(using: context)
+        } catch {
+            assertionFailure("Failed to clear sessions: \(error)")
+        }
     }
 }
 

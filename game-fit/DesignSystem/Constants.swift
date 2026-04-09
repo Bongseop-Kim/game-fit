@@ -1,4 +1,4 @@
-import CoreFoundation
+import SwiftUI
 
 enum DS {
     static let cardRadius    : CGFloat = 12

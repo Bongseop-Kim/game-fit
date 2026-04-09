@@ -22,7 +22,7 @@ struct MainTabView: View {
             }
             .tabItem { Label("설정", systemImage: "gearshape.fill") }
         }
-        .onAppear { appState.refresh(using: context) }
+        .task { appState.refresh(using: context) }
     }
 }
 

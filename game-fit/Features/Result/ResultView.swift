@@ -9,9 +9,11 @@ struct ResultView: View {
     @Environment(\.modelContext) private var context
     @Environment(AppState.self) private var appState
     @Query private var allSessions: [GameSession]
+    @Query private var settingsArray: [UserSettings]
 
     @State private var isNewRecord = false
     @State private var hasSaved = false
+    @State private var navigateToNextDifficulty = false
 
     var body: some View {
         ScrollView {
@@ -59,6 +61,11 @@ struct ResultView: View {
         .background(Color.appBackground)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(isPresented: $navigateToNextDifficulty) {
+            if let nextDifficulty = difficulty.next {
+                GamePlayView(game: game, difficulty: nextDifficulty)
+            }
+        }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 NavigationLink {
@@ -69,7 +76,7 @@ struct ResultView: View {
                 .buttonStyle(.plain)
 
                 SecondaryButton(title: difficulty.next != nil ? "다음 난이도" : "최고 난이도") {
-                    appState.homePath = NavigationPath()
+                    navigateToNextDifficulty = true
                 }
                 .disabled(difficulty.next == nil)
             }
@@ -82,6 +89,9 @@ struct ResultView: View {
     private func saveSessionIfNeeded() {
         guard !hasSaved else { return }
         hasSaved = true
+
+        guard settingsArray.first?.autoSaveResult ?? true else { return }
+
         let prevBest = allSessions
             .filter { $0.gameId == game.id && $0.difficulty == difficulty.rawValue }
             .map(\.accuracy).max() ?? 0

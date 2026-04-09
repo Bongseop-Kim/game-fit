@@ -6,7 +6,7 @@ struct LineChart: View {
 
     var body: some View {
         Chart {
-            ForEach(dataPoints, id: \.date) { point in
+            ForEach(Array(dataPoints.enumerated()), id: \.offset) { _, point in
                 LineMark(
                     x: .value("날짜", point.date, unit: .day),
                     y: .value("정확도", point.accuracy * 100)
